@@ -17,7 +17,7 @@ export default function AIChatbot() {
     setInp('');
 
     try {
-      const res = await axios.post('http://localhost:8000/api/chat', { message: userMessage.text });
+      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/chat`, { message: userMessage.text });
       setMsgs(prev => [...prev, { role: 'ai', text: res.data.response }]);
     } catch (err) {
       console.error(err);

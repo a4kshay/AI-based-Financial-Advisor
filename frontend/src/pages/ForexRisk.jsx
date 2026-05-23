@@ -8,7 +8,7 @@ export default function ForexRisk() {
   useEffect(() => {
     const fetchForex = async () => {
       try {
-        const res = await axios.get('http://localhost:8000/api/forex');
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/forex`);
         setData(res.data.data);
       } catch (err) {
         console.error(err);

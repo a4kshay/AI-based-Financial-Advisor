@@ -4,7 +4,7 @@ import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianG
 import { motion } from 'framer-motion';
 import { TrendingUp } from 'lucide-react';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function InvestmentPrediction() {
   const [initial, setInitial] = useState(50000);
