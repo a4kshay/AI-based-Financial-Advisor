@@ -21,7 +21,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
-    const res = await axios.post('/api/login', { email, password });
+    const res = await axios.post('/api/login', { email: email.trim().toLowerCase(), password });
     const userData = res.data.user;
     setUser(userData);
     localStorage.setItem('ai_fin_user', JSON.stringify(userData));
@@ -29,7 +29,11 @@ export function AuthProvider({ children }) {
   };
 
   const signup = async (username, email, password) => {
-    const res = await axios.post('/api/signup', { username, email, password });
+    const res = await axios.post('/api/signup', {
+      username: username.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+    });
     return res.data;
   };
 

@@ -1,6 +1,8 @@
+import os
+import re
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, field_validator
 import pandas as pd
 import numpy as np
 import yfinance as yf
@@ -12,10 +14,16 @@ app = FastAPI(title="AI Financial Advisor API")
 def startup_event():
     init_db()
 
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "*").split(",")
+    if origin.strip()
+]
+
 # Setup CORS for Frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # For dev purposes
+    allow_origins=allowed_origins,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,6 +33,11 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"message": "AI Financial Advisor Backend Running"}
+
+
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "message": "Backend is reachable"}
 
 
 # --- Schemas ---
@@ -48,9 +61,25 @@ class SignupInput(BaseModel):
     email: str
     password: str
 
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value):
+        email = value.strip().lower()
+        if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", email):
+            raise ValueError("Enter a valid email address.")
+        return email
+
 class LoginInput(BaseModel):
     email: str
     password: str
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value):
+        email = value.strip().lower()
+        if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", email):
+            raise ValueError("Enter a valid email address.")
+        return email
 
 class FDLiquidationInput(BaseModel):
     principal: float
@@ -71,13 +100,19 @@ class AssetPredictionInput(BaseModel):
 
 @app.post("/api/signup")
 def signup(data: SignupInput):
+    username = data.username.strip()
+    email = data.email.strip().lower()
+
     if len(data.password) < 6:
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
-    if len(data.username.strip()) < 2:
+    if len(username) < 2:
         raise HTTPException(status_code=400, detail="Username must be at least 2 characters.")
-    success = create_user(data.username.strip(), data.email.strip().lower(), data.password)
+    if get_user_by_email(email):
+        raise HTTPException(status_code=409, detail="An account with this email already exists. Please sign in instead.")
+
+    success = create_user(username, email, data.password)
     if not success:
-        raise HTTPException(status_code=409, detail="An account with this email or username already exists.")
+        raise HTTPException(status_code=409, detail="An account with this email already exists. Please sign in instead.")
     return {"status": "success", "message": "Account created successfully!"}
 
 
@@ -714,5 +749,3 @@ def predict_assets_growth(data: AssetPredictionInput):
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-

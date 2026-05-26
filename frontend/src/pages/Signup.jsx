@@ -13,9 +13,31 @@ export default function Signup() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const getErrorMessage = (err) => {
+    const detail = err.response?.data?.detail;
+    if (Array.isArray(detail)) {
+      return detail[0]?.msg || 'Please check the form and try again.';
+    }
+    if (typeof detail === 'string') return detail;
+    if (err.code === 'ECONNABORTED' || !err.response) {
+      return 'Backend is not reachable right now. Please try again in a moment.';
+    }
+    return 'Registration failed. Please check your details and try again.';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    const email = formData.email.trim().toLowerCase();
+    const username = formData.username.trim();
+    if (username.length < 2) {
+      setError('Username must be at least 2 characters.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Enter a valid email address.');
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match.');
       return;
@@ -26,17 +48,17 @@ export default function Signup() {
     }
     setLoading(true);
     try {
-      await signup(formData.username, formData.email, formData.password);
+      await signup(username, email, formData.password);
       setSuccess('Account created successfully! Redirecting to login...');
       setTimeout(() => navigate('/login'), 1500);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Registration failed. Email or username may already be taken.');
+      setError(getErrorMessage(err));
     }
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background dashboard-grid-bg relative overflow-hidden px-4 py-10">
+    <div className="min-h-screen flex items-center justify-center bg-background dashboard-grid-bg relative overflow-hidden px-4 py-8 sm:py-10">
       <div className="absolute top-[-150px] right-[-100px] w-96 h-96 bg-primary/20 blur-[130px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[-100px] left-[-100px] w-80 h-80 bg-blue-500/10 blur-[100px] rounded-full pointer-events-none" />
 
@@ -47,14 +69,14 @@ export default function Signup() {
         className="w-full max-w-md z-10"
       >
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 text-primary font-bold text-2xl mb-2">
-            <Bot size={32} />
-            <span>AI Financial Advisor</span>
+          <Link to="/" className="inline-flex items-center justify-center gap-2 text-primary font-bold text-xl sm:text-2xl mb-2">
+            <Bot size={30} className="shrink-0" />
+            <span className="leading-tight">AI Financial Advisor</span>
           </Link>
           <p className="text-textSecondary text-sm mt-1">Start your journey to smarter investing</p>
         </div>
 
-        <div className="glass-card rounded-2xl p-8 shadow-2xl">
+        <div className="glass-card rounded-2xl p-5 sm:p-8 shadow-2xl">
           <h2 className="text-2xl font-bold mb-6 text-center">Create Account ✨</h2>
 
           {error && (

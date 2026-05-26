@@ -10,7 +10,10 @@ const isLocalhost = Boolean(
   window.location.hostname === '127.0.0.1'
 );
 
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || (isLocalhost ? '' : 'https://ai-financial-advisor-api.onrender.com');
+const apiBaseUrl = import.meta.env.VITE_API_URL || (isLocalhost ? '' : 'https://ai-financial-advisor-api.onrender.com');
+
+axios.defaults.baseURL = apiBaseUrl.replace(/\/+$/, '');
+axios.defaults.timeout = 20000;
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

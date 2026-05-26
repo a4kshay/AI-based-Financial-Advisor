@@ -14,14 +14,39 @@ def init_db():
     conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
+            username TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL,
             hashed_password TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    _migrate_username_unique_constraint(conn)
     conn.commit()
     conn.close()
+
+def _migrate_username_unique_constraint(conn):
+    row = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'users'"
+    ).fetchone()
+    create_sql = row["sql"] if row else ""
+    if "username TEXT UNIQUE" not in create_sql:
+        return
+
+    conn.execute("""
+        CREATE TABLE users_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            hashed_password TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.execute("""
+        INSERT OR IGNORE INTO users_new (id, username, email, hashed_password, created_at)
+        SELECT id, username, email, hashed_password, created_at FROM users
+    """)
+    conn.execute("DROP TABLE users")
+    conn.execute("ALTER TABLE users_new RENAME TO users")
 
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()

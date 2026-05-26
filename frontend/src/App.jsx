@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { LayoutDashboard, TrendingUp, Calculator, ShieldAlert, Bot, Bell, User, LogOut, Compass, Briefcase, PieChart, Activity, LineChart } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -123,9 +122,55 @@ function Sidebar() {
 }
 
 // ─── Navbar ─────────────────────────────────────────────────
+function MobileNavigation() {
+  const location = useLocation();
+  const { logout } = useAuth();
+  const isOnDashboard = location.pathname.startsWith('/dashboard');
+  if (!isOnDashboard) return null;
+
+  const navItems = [
+    { name: 'Home', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
+    { name: 'Market', path: '/dashboard/market', icon: <Activity size={20} /> },
+    { name: 'Explore', path: '/dashboard/explore', icon: <Compass size={20} /> },
+    { name: 'Stocks', path: '/dashboard/stocks', icon: <TrendingUp size={20} /> },
+    { name: 'AI', path: '/dashboard/ai', icon: <Bot size={20} /> },
+  ];
+
+  return (
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-surface/95 backdrop-blur border-t border-border">
+      <div className="grid grid-cols-6">
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <Link
+              key={item.name}
+              to={item.path}
+              className={`flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-[11px] font-medium ${
+                isActive ? 'text-primary' : 'text-textSecondary'
+              }`}
+            >
+              {item.icon}
+              <span className="truncate">{item.name}</span>
+            </Link>
+          );
+        })}
+        <button
+          type="button"
+          onClick={logout}
+          className="flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-[11px] font-medium text-textSecondary"
+          title="Logout"
+        >
+          <LogOut size={20} />
+          <span>Logout</span>
+        </button>
+      </div>
+    </nav>
+  );
+}
+
 function Navbar() {
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const isOnDashboard = location.pathname.startsWith('/dashboard');
   if (!isOnDashboard) return null;
 
@@ -136,9 +181,9 @@ function Navbar() {
   })();
 
   return (
-    <header className="h-16 bg-surface border-b border-border flex items-center justify-between px-6 sticky top-0 z-20 w-full">
-      <div className="flex items-center gap-4">
-        <h2 className="text-lg font-semibold">{pageLabel}</h2>
+    <header className="h-16 bg-surface border-b border-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20 w-full">
+      <div className="flex items-center gap-3 min-w-0">
+        <h2 className="text-base sm:text-lg font-semibold truncate">{pageLabel}</h2>
       </div>
       <div className="flex items-center gap-3">
         <button className="text-textSecondary hover:text-primary transition-colors">
@@ -162,7 +207,7 @@ function AppShell() {
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar />
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-4 pb-24 sm:p-6 md:pb-6 overflow-auto">
           <Routes>
             {/* Public */}
             <Route path="/" element={<LandingPage />} />
@@ -184,6 +229,7 @@ function AppShell() {
           </Routes>
         </main>
       </div>
+      <MobileNavigation />
     </div>
   );
 }

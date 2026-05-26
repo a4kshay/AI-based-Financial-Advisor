@@ -12,21 +12,38 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const getErrorMessage = (err) => {
+    const detail = err.response?.data?.detail;
+    if (Array.isArray(detail)) {
+      return detail[0]?.msg || 'Enter a valid email address.';
+    }
+    if (typeof detail === 'string') return detail;
+    if (err.code === 'ECONNABORTED' || !err.response) {
+      return 'Backend is not reachable right now. Please try again in a moment.';
+    }
+    return 'Invalid email or password. Please try again.';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    const email = formData.email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Enter a valid email address.');
+      return;
+    }
     setLoading(true);
     try {
-      await login(formData.email, formData.password);
+      await login(email, formData.password);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid email or password. Please try again.');
+      setError(getErrorMessage(err));
     }
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background dashboard-grid-bg relative overflow-hidden px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background dashboard-grid-bg relative overflow-hidden px-4 py-8">
       {/* Background glows */}
       <div className="absolute top-[-150px] left-[-100px] w-96 h-96 bg-primary/20 blur-[130px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[-100px] right-[-100px] w-80 h-80 bg-blue-500/10 blur-[100px] rounded-full pointer-events-none" />
@@ -39,15 +56,15 @@ export default function Login() {
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 text-primary font-bold text-2xl mb-2">
-            <Bot size={32} />
-            <span>AI Financial Advisor</span>
+          <Link to="/" className="inline-flex items-center justify-center gap-2 text-primary font-bold text-xl sm:text-2xl mb-2">
+            <Bot size={30} className="shrink-0" />
+            <span className="leading-tight">AI Financial Advisor</span>
           </Link>
           <p className="text-textSecondary text-sm mt-1">Sign in to your account to continue</p>
         </div>
 
         {/* Card */}
-        <div className="glass-card rounded-2xl p-8 shadow-2xl">
+        <div className="glass-card rounded-2xl p-5 sm:p-8 shadow-2xl">
           <h2 className="text-2xl font-bold mb-6 text-center">Welcome Back 👋</h2>
 
           {error && (
