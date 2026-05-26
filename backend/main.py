@@ -16,7 +16,7 @@ def startup_event():
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], # For dev purposes
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -226,6 +226,12 @@ def get_market_indices():
                 hist_30d = ticker.history(period="1mo")
                 sparkline = [round(float(p), 2) for p in hist_30d['Close'].values]
                 
+                closes = hist_30d['Close'].values.tolist()
+                last_date_str = hist_30d.index[-1].strftime("%Y-%m-%d") if len(hist_30d) > 0 else "2024-01-01"
+                prediction, forecast_analysis = _forecast_from_history(
+                    closes, current_price, last_date_str, forecast_days=7
+                )
+                
                 results.append({
                     "name": name,
                     "ticker": ticker_symbol,
@@ -236,6 +242,8 @@ def get_market_indices():
                     "high": round(float(hist['High'].iloc[-1]), 2),
                     "low": round(float(hist['Low'].iloc[-1]), 2),
                     "sparkline": sparkline,
+                    "prediction": prediction,
+                    "forecast": forecast_analysis,
                 })
             else:
                 results.append({

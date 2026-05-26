@@ -18,7 +18,7 @@ export default function SIPCalculator() {
     // Simulate slight delay for animation effect
     await new Promise(r => setTimeout(r, 600));
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/sip`, formData);
+      const res = await axios.post('/api/sip', formData);
       setResults(res.data.data);
     } catch (err) {
       console.error(err);

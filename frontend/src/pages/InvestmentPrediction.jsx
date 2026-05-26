@@ -4,7 +4,7 @@ import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianG
 import { motion } from 'framer-motion';
 import { TrendingUp } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Using global axios configuration for API requests
 
 export default function InvestmentPrediction() {
   const [initial, setInitial] = useState(50000);
@@ -16,7 +16,7 @@ export default function InvestmentPrediction() {
   const predict = async () => {
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/api/predict/assets`, {
+      const res = await axios.post('/api/predict/assets', {
         initial_investment: initial,
         monthly_contribution: monthly,
         years,

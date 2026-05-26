@@ -136,8 +136,12 @@ function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card rounded-lg px-3 py-2 text-xs border border-border shadow-xl">
-      <p className="text-textSecondary mb-0.5">Day {label}</p>
-      <p className="font-bold text-textPrimary">₹{payload[0].value?.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
+      <p className="text-textSecondary mb-0.5">{label}</p>
+      {payload.map((p, i) => (
+        <p key={i} className="font-bold" style={{ color: p.color }}>
+          {p.name}: ₹{p.value?.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+        </p>
+      ))}
     </div>
   );
 }
@@ -179,7 +183,17 @@ export default function LiveMarket() {
   }, []);
 
   const selected = indices[selectedIdx];
-  const chartData = selected?.sparkline?.map((v, i) => ({ day: i + 1, price: v })) || [];
+  const chartData = (() => {
+    if (!selected) return [];
+    const hist = (selected.sparkline || []).map((v, i) => ({ day: `D${i + 1}`, price: v, predicted: null }));
+    const preds = (selected.prediction || []).map((p, i) => ({ day: `F${i + 1}`, price: null, predicted: p.predicted_price }));
+    
+    if (hist.length > 0 && preds.length > 0) {
+      const lastHist = hist[hist.length - 1];
+      hist[hist.length - 1] = { ...lastHist, predicted: lastHist.price };
+    }
+    return [...hist, ...preds];
+  })();
   const meta = selected ? (INDEX_META[selected.name] || { color: '#2563EB' }) : { color: '#2563EB' };
 
   // Market stats cards
@@ -281,15 +295,40 @@ export default function LiveMarket() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#2A303C" vertical={false} />
                 <XAxis dataKey="day" stroke="#4B5563" fontSize={10} tickLine={false} axisLine={false}
-                  tickFormatter={v => `D${v}`} interval={4} />
+                  interval="preserveStartEnd" minTickGap={20} />
                 <YAxis stroke="#4B5563" fontSize={10} tickLine={false} axisLine={false} width={68}
                   tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} domain={['auto', 'auto']} />
                 <Tooltip content={<CustomTooltip />} />
                 <Area type="monotone" dataKey="price" stroke={meta.color} strokeWidth={2.5}
-                  fill="url(#areaGrad)" activeDot={{ r: 5, strokeWidth: 0, fill: meta.color }} />
+                  fill="url(#areaGrad)" activeDot={{ r: 5, strokeWidth: 0, fill: meta.color }} name="Actual" connectNulls={false} />
+                <Area type="monotone" dataKey="predicted" stroke="#10B981" strokeWidth={2.5} strokeDasharray="6 4"
+                  fill="none" name="Forecast (7d)" dot={{ r: 3, fill: '#10B981' }} connectNulls={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
+
+          {selected.forecast && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-border/50">
+              <div>
+                <p className="text-xs text-textSecondary uppercase tracking-wider font-bold mb-1">7-Day Forecast</p>
+                <p className="text-xl font-extrabold">₹{formatINR(selected.forecast.forecast_target_price)}</p>
+                <p className={`text-sm font-semibold ${selected.forecast.forecast_change_pct >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {selected.forecast.forecast_change_pct >= 0 ? '+' : ''}{selected.forecast.forecast_change_pct}%
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-textSecondary uppercase tracking-wider font-bold mb-1">Trend Sentiment</p>
+                <p className={`text-xl font-extrabold ${selected.forecast.sentiment === 'Bullish' ? 'text-green-400' : selected.forecast.sentiment === 'Bearish' ? 'text-red-400' : 'text-yellow-400'}`}>
+                  {selected.forecast.sentiment}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-textSecondary uppercase tracking-wider font-bold mb-1">Analysis Detail</p>
+                <p className="text-sm font-semibold text-textPrimary">Daily Drift: {selected.forecast.daily_trend_pct}%</p>
+                <p className="text-sm font-semibold text-textSecondary">Volatility: {selected.forecast.volatility_pct}%</p>
+              </div>
+            </div>
+          )}
         </motion.div>
       )}
 

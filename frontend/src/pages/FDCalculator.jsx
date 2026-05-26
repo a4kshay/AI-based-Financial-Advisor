@@ -3,7 +3,7 @@ import axios from 'axios';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Using global axios configuration for API requests
 
 export default function FDCalculator() {
   const [activeTab, setActiveTab] = useState('calculator');
@@ -34,7 +34,7 @@ export default function FDCalculator() {
     e.preventDefault();
     setFdLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/api/fd`, fdForm);
+      const res = await axios.post('/api/fd', fdForm);
       setFdResults(res.data.data);
     } catch {
       // Fallback mock
@@ -54,7 +54,7 @@ export default function FDCalculator() {
     e.preventDefault();
     setLiqLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/api/fd/liquidation`, liqForm);
+      const res = await axios.post('/api/fd/liquidation', liqForm);
       setLiqResults(res.data.data);
     } catch {
       // Fallback mock

@@ -142,7 +142,7 @@ export default function LandingPage() {
   const calculateSIP = async () => {
     setSipLoading(true);
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/sip`, {
+      const res = await axios.post('/api/sip', {
         monthly_investment: sipMonthly,
         duration_years: sipDuration,
         expected_return_rate: sipRate
@@ -180,7 +180,7 @@ export default function LandingPage() {
   const calculateFDLiquidation = async () => {
     setFdLoading(true);
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/fd/liquidation`, {
+      const res = await axios.post('/api/fd/liquidation', {
         principal: fdPrincipal,
         interest_rate: fdRate,
         duration_years: fdDuration,
@@ -236,7 +236,7 @@ export default function LandingPage() {
   const predictAssets = async () => {
     setAssetLoading(true);
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/predict/assets`, {
+      const res = await axios.post('/api/predict/assets', {
         initial_investment: assetInitial,
         monthly_contribution: assetMonthly,
         years: assetYears
@@ -288,7 +288,7 @@ export default function LandingPage() {
     setChatLoading(true);
 
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/chat`, { message: query });
+      const res = await axios.post('/api/chat', { message: query });
       setChatMsgs(prev => [...prev, { role: 'ai', text: res.data.response }]);
     } catch (err) {
       console.error(err);
